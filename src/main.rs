@@ -1,14 +1,9 @@
-use std::error::Error;
-
 use error_iter::ErrorIter as _;
+use glam::Vec2;
 use log::error;
 use pixels::{wgpu::Color, Pixels, SurfaceTexture};
-use winit::{
-    dpi::LogicalSize,
-    event::{Event, WindowEvent},
-    event_loop::EventLoop,
-    window::WindowBuilder,
-};
+use std::error::Error;
+use winit::{dpi::LogicalSize, event_loop::EventLoop, window::WindowBuilder};
 use winit_input_helper::WinitInputHelper;
 
 struct Frame<'a> {
@@ -37,6 +32,21 @@ impl<'a> Frame<'a> {
             return;
         }
         self.set_pixel(x, y, color);
+    }
+
+    fn draw_triangle(&mut self, v0: Vec2, v1: Vec2, v2: Vec2, color: Color) {
+        let min = v0.min(v1.min(v2)).as_uvec2();
+        let max = v0.max(v1.max(v2)).as_uvec2();
+        for py in min.y..max.y {
+            for px in min.x..max.x {
+                if (v1.x - v0.x) * (py as f32 - v0.y) - (v1.y - v0.y) * (px as f32 - v0.x) > 0.0
+                    && (v2.x - v1.x) * (py as f32 - v1.y) - (v2.y - v1.y) * (px as f32 - v1.x) > 0.0
+                    && (v0.x - v2.x) * (py as f32 - v2.y) - (v0.y - v2.y) * (px as f32 - v2.x) > 0.0
+                {
+                    self.try_set_pixel(px, py, color);
+                }
+            }
+        }
     }
 }
 
@@ -81,18 +91,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             frame.data.fill(0);
 
             if let Some((x, y)) = input.cursor() {
-                for i in 0..(x / SCALE) as u32 {
-                    frame.try_set_pixel(
-                        i,
-                        i,
-                        Color {
-                            r: 1.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        },
-                    );
-                }
+                let sx = x / SCALE;
+                let sy = y / SCALE;
+
+                frame.draw_triangle(
+                    Vec2 { x: 150.0, y: 150.0 },
+                    Vec2 { x: sx, y: sy },
+                    Vec2 { x: 200.0, y: 100.0 },
+                    Color {
+                        r: 0.0,
+                        g: 1.0,
+                        b: 1.0,
+                        a: 1.0,
+                    },
+                );
             }
 
             frame.set_pixel(
