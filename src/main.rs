@@ -31,6 +31,13 @@ impl<'a> Frame<'a> {
             (color.a * 255.0) as u8,
         ]);
     }
+
+    fn try_set_pixel(&mut self, x: u32, y: u32, color: Color) {
+        if x >= self.width || y >= self.height {
+            return;
+        }
+        self.set_pixel(x, y, color);
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -39,10 +46,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     const WIDTH: u32 = 400;
     const HEIGHT: u32 = 300;
+    const SCALE: f32 = 2.0;
 
     let window = {
-        let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
-        let scaled_size = LogicalSize::new(WIDTH as f64 * 2.0, HEIGHT as f64 * 2.0);
+        let size = LogicalSize::new(WIDTH as f32, HEIGHT as f32);
+        let scaled_size = LogicalSize::new(WIDTH as f32 * SCALE, HEIGHT as f32 * SCALE);
         WindowBuilder::new()
             .with_title("3dgame")
             .with_inner_size(scaled_size)
@@ -58,45 +66,52 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     event_loop.run(move |event, elwt| {
-        match event {
-            Event::WindowEvent { ref event, .. } => match event {
-                WindowEvent::RedrawRequested => {
-                    if let Err(err) = pixels.render() {
-                        log_error("pixels.render", err);
-                        elwt.exit();
-                        return;
-                    }
-                }
-                WindowEvent::CloseRequested => {
-                    elwt.exit();
-                }
-                _ => (),
-            },
-            _ => (),
-        }
+        if input.update(&event) {
+            if input.close_requested() {
+                elwt.exit();
+                return;
+            }
 
-        let mut frame = Frame {
-            width: WIDTH,
-            height: HEIGHT,
-            data: pixels.frame_mut(),
-        };
+            let mut frame = Frame {
+                width: WIDTH,
+                height: HEIGHT,
+                data: pixels.frame_mut(),
+            };
 
-        for i in 0..50 as u32 {
+            frame.data.fill(0);
+
+            if let Some((x, y)) = input.cursor() {
+                for i in 0..(x / SCALE) as u32 {
+                    frame.try_set_pixel(
+                        i,
+                        i,
+                        Color {
+                            r: 1.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        },
+                    );
+                }
+            }
+
             frame.set_pixel(
-                i,
-                i,
+                WIDTH - 1,
+                HEIGHT - 1,
                 Color {
-                    r: 1.0,
-                    g: 0.0,
+                    r: 0.0,
+                    g: 1.0,
                     b: 0.0,
                     a: 1.0,
                 },
             );
-        }
 
-        frame.set_pixel(WIDTH - 1, HEIGHT - 1, Color { r: 0.0, g: 1.0, b: 0.0, a: 1.0 });
+            if let Err(err) = pixels.render() {
+                log_error("pixels.render", err);
+                elwt.exit();
+                return;
+            }
 
-        if input.update(&event) {
             window.request_redraw();
         }
     })?;
