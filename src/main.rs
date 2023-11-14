@@ -1,12 +1,15 @@
+mod scene;
+use scene::*;
+
 use error_iter::ErrorIter as _;
-use glam::{swizzles::*, Mat4, Vec2, Vec3};
+use glam::{Mat4, Quat, Vec2, Vec3};
 use log::error;
 use pixels::{wgpu::Color, Pixels, SurfaceTexture};
 use std::error::Error;
 use winit::{dpi::LogicalSize, event_loop::EventLoop, window::WindowBuilder};
 use winit_input_helper::WinitInputHelper;
 
-struct Frame<'a> {
+pub struct Frame<'a> {
     width: u32,
     height: u32,
     data: &'a mut [u8],
@@ -77,6 +80,37 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut time = 0.0f32;
 
+    let mut scene = Scene {
+        camera: Camera {
+            projection: Mat4::perspective_infinite_rh(
+                (90f32).to_radians(),
+                WIDTH as f32 / HEIGHT as f32,
+                0.1,
+            ),
+            position: Vec3::new(0.0, 0.0, 1.5),
+            rotation: Quat::from_euler(glam::EulerRot::XYZ, 0.0, 0.4, 0.0),
+        },
+        triangles: vec![
+            Triangle {
+                v0: Vec3::new(-0.5, 0.5, 0.0),
+                v1: Vec3::new(-0.5, -0.5, 0.0),
+                v2: Vec3::new(0.5, -0.5, 0.0),
+                color: Color::RED,
+            },
+            Triangle {
+                v0: Vec3::new(0.5, -0.5, 0.0),
+                v1: Vec3::new(0.5, 0.5, 0.0),
+                v2: Vec3::new(-0.5, -0.5, 0.0),
+                color: Color {
+                    r: 1.0,
+                    g: 0.8,
+                    b: 0.6,
+                    a: 1.0,
+                },
+            },
+        ],
+    };
+
     event_loop.run(move |event, elwt| {
         if input.update(&event) {
             if input.close_requested() {
@@ -92,34 +126,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             frame.data.fill(0);
 
-            if let Some((x, y)) = input.cursor() {
-                let sx = x / SCALE;
-                let sy = y / SCALE;
+            // if let Some((x, y)) = input.cursor() {}
 
-                let mut verts = [
-                    Vec2 { x: 150.0, y: 150.0 },
-                    Vec2 { x: sx, y: sy },
-                    Vec2 { x: 200.0, y: 100.0 },
-                ];
+            scene.camera.rotation =
+                Quat::from_euler(glam::EulerRot::XYZ, 0.0, (time / 48.0).sin() / 3.0, 0.0);
 
-                let mat = Mat4::from_rotation_z((time / 4.0).sin() / 10.0);
-
-                verts = verts.map(|v| Vec2 {
-                    ..mat.transform_point3(Vec3::new(v.x, v.y, 0.0)).xy()
-                });
-
-                frame.draw_triangle(
-                    verts[0],
-                    verts[1],
-                    verts[2],
-                    Color {
-                        r: 0.0,
-                        g: 1.0,
-                        b: 1.0,
-                        a: 1.0,
-                    },
-                );
-            }
+            scene.render(&mut frame);
 
             frame.set_pixel(
                 WIDTH - 1,
