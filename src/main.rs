@@ -1,5 +1,5 @@
 use error_iter::ErrorIter as _;
-use glam::Vec2;
+use glam::{swizzles::*, Mat4, Vec2, Vec3};
 use log::error;
 use pixels::{wgpu::Color, Pixels, SurfaceTexture};
 use std::error::Error;
@@ -75,6 +75,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
 
+    let mut time = 0.0f32;
+
     event_loop.run(move |event, elwt| {
         if input.update(&event) {
             if input.close_requested() {
@@ -94,10 +96,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let sx = x / SCALE;
                 let sy = y / SCALE;
 
-                frame.draw_triangle(
+                let mut verts = [
                     Vec2 { x: 150.0, y: 150.0 },
                     Vec2 { x: sx, y: sy },
                     Vec2 { x: 200.0, y: 100.0 },
+                ];
+
+                let mat = Mat4::from_rotation_z((time / 4.0).sin() / 10.0);
+
+                verts = verts.map(|v| Vec2 {
+                    ..mat.transform_point3(Vec3::new(v.x, v.y, 0.0)).xy()
+                });
+
+                frame.draw_triangle(
+                    verts[0],
+                    verts[1],
+                    verts[2],
                     Color {
                         r: 0.0,
                         g: 1.0,
@@ -123,6 +137,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 elwt.exit();
                 return;
             }
+
+            time = time + 1.0;
 
             window.request_redraw();
         }
