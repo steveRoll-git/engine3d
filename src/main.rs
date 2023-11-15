@@ -98,14 +98,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         },
         triangles: vec![
             Triangle {
-                v0: Vec3::new(-0.5, 0.5, 0.0),
-                v1: Vec3::new(-0.5, -0.5, 0.0),
+                v0: Vec3::new(-0.5, -0.5, 0.0),
+                v1: Vec3::new(-0.5, 0.5, 0.0),
                 v2: Vec3::new(0.5, -0.5, 0.0),
                 color: Color::RED,
             },
             Triangle {
-                v0: Vec3::new(0.5, -0.5, 0.0),
-                v1: Vec3::new(0.5, 0.5, 0.0),
+                v0: Vec3::new(0.5, 0.5, 0.0),
+                v1: Vec3::new(0.5, -0.5, 0.0),
                 v2: Vec3::new(-0.5, -0.5, 0.0),
                 color: Color {
                     r: 1.0,

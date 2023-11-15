@@ -32,7 +32,7 @@ impl Scene {
         let mat = self.camera.projection * self.camera.get_view_mat().inverse();
         for t in &self.triangles {
             let [v0, v1, v2] = [t.v0, t.v1, t.v2].map(|v| {
-                mat.project_point3(v).xy() * vec2(frame.width as f32, frame.height as f32)
+                mat.project_point3(v).xy() * vec2(frame.width as f32, -(frame.height as f32))
                     + vec2(frame.width as f32 / 2.0, frame.height as f32 / 2.0)
             });
             frame.draw_triangle(v0, v1, v2, t.color);
