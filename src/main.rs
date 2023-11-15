@@ -6,7 +6,11 @@ use glam::{Mat4, Quat, Vec2, Vec3};
 use log::error;
 use pixels::{wgpu::Color, Pixels, SurfaceTexture};
 use std::error::Error;
-use winit::{dpi::LogicalSize, event_loop::EventLoop, window::WindowBuilder};
+use winit::{
+    dpi::LogicalSize,
+    event_loop::EventLoop,
+    window::{WindowBuilder, WindowButtons},
+};
 use winit_input_helper::WinitInputHelper;
 
 pub struct Frame<'a> {
@@ -68,6 +72,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             .with_title("3dgame")
             .with_inner_size(scaled_size)
             .with_min_inner_size(size)
+            .with_resizable(false)
+            .with_enabled_buttons(WindowButtons::MINIMIZE | WindowButtons::CLOSE)
             .build(&event_loop)
             .unwrap()
     };
