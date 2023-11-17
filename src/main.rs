@@ -13,6 +13,10 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 
+fn is_ccw(v0: Vec2, v1: Vec2, v2: Vec2) -> bool {
+    (v2.y - v0.y) * (v1.x - v0.x) > (v1.y - v0.y) * (v2.x - v0.x)
+}
+
 pub struct Frame<'a> {
     width: u32,
     height: u32,
@@ -42,6 +46,9 @@ impl<'a> Frame<'a> {
     }
 
     fn draw_triangle(&mut self, v0: Vec2, v1: Vec2, v2: Vec2, color: Color) {
+        if !is_ccw(v0, v1, v2) {
+            return;
+        }
         let min = v0.min(v1.min(v2)).as_uvec2();
         let max = v0.max(v1.max(v2)).as_uvec2();
         for py in min.y..max.y {
@@ -105,7 +112,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
             Triangle {
                 v0: Vec3::new(0.5, 0.5, 0.0),
-                v1: Vec3::new(0.5, -0.5, 0.0),
+                v1: Vec3::new(-0.2, 0.2, 0.0),
                 v2: Vec3::new(-0.5, -0.5, 0.0),
                 color: Color {
                     r: 1.0,
