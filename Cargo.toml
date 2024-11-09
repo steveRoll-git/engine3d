@@ -10,5 +10,4 @@ error-iter = "0.4.1"
 glam = "0.24.2"
 log = "0.4.20"
 pixels = "0.14.0"
-winit = { version = "0.29", features = ["rwh_05"] }
-winit_input_helper = "0.15.0"
+winit = { version = "0.30.5", features = ["default", "rwh_05"] }
