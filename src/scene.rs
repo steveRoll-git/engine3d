@@ -1,5 +1,15 @@
 use glam::{vec2, Mat4, Quat, Vec2, Vec3, Vec3Swizzles};
-use pixels::wgpu::Color;
+
+#[derive(Clone, Copy)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Color {
+    pub const RED: Color = Color { r: 255, g: 0, b: 0 };
+}
 
 fn is_ccw(v0: Vec2, v1: Vec2, v2: Vec2) -> bool {
     (v2.y - v0.y) * (v1.x - v0.x) > (v1.y - v0.y) * (v2.x - v0.x)
@@ -8,7 +18,8 @@ fn is_ccw(v0: Vec2, v1: Vec2, v2: Vec2) -> bool {
 pub struct Frame<'a> {
     pub width: u32,
     pub height: u32,
-    pub data: &'a mut [u8],
+    pub scale: u32,
+    pub buffer: &'a mut [u32],
 }
 
 impl<'a> Frame<'a> {
@@ -17,13 +28,12 @@ impl<'a> Frame<'a> {
             x < self.width && y < self.height,
             "pixel position out of range"
         );
-        let index = ((x + y * self.width) * 4) as usize;
-        self.data[index..index + 4].copy_from_slice(&[
-            (color.r * 255.0) as u8,
-            (color.g * 255.0) as u8,
-            (color.b * 255.0) as u8,
-            (color.a * 255.0) as u8,
-        ]);
+        for sx in (x * self.scale)..(x * self.scale + self.scale) {
+            for sy in (y * self.scale)..(y * self.scale + self.scale) {
+                let index = (sx + sy * self.width * self.scale) as usize;
+                self.buffer[index] = u32::from_be_bytes([0, color.r, color.g, color.b]);
+            }
+        }
     }
 
     pub fn try_set_pixel(&mut self, x: u32, y: u32, color: Color) {
