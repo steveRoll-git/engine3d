@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 error-iter = "0.4.1"
-glam = "0.24.2"
+glam = "0.29.2"
 log = "0.4.20"
 pixels = "0.14.0"
 winit = { version = "0.30.5", features = ["default", "rwh_05"] }
